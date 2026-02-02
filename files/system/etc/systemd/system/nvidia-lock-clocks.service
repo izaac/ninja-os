@@ -1,0 +1,11 @@
+[Unit]
+Description=Lock NVIDIA GPU Clocks for stability and undervolting
+After=display-manager.service nvidia-persistenced.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nvidia-smi -lgc 210,2500
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

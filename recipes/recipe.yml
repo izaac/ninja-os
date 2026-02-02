@@ -1,45 +1,106 @@
----
-# yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
 name: ninja-os
-# description will be included in the image's metadata
-description: This is my personal OS image.
+description: "Ninja build"
+base-image: ghcr.io/ublue-os/kinoite-main
+image-version: 41
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: 42 # latest is also supported if you want new updates ASAP
-
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
   - type: files
     files:
       - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+        destination: /
 
-  - type: dnf
+  - type: rpm-ostree
     repos:
-      copr:
-        - atim/starship
+      - https://copr.fedorainfracloud.org/coprs/atim/lazygit/repo/fedora-%OS_VERSION%/atim-lazygit-fedora-%OS_VERSION%.repo
+      - https://copr.fedorainfracloud.org/coprs/varlad/yazi/repo/fedora-%OS_VERSION%/varlad-yazi-fedora-%OS_VERSION%.repo
     install:
-      packages:
-        - micro
-        - starship
-    remove:
-      packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
-        - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+      # Development
+      - neovim
+      - gcc
+      - gcc-c++
+      - make
+      - git
+      - git-credential-libsecret
+      - lazygit
+      - direnv
+      - sqlite
+      - nodejs
+      - python3
+      - python3-pip
+
+      # Shell & CLI Utils
+      - starship
+      - lsd
+      - bat
+      - fzf
+      - fd-find
+      - ripgrep
+      - yazi
+      - btop
+      - fastfetch
+      - jq
+      - rsync
+      - ncdu
+      - tldr
+      - man-db
+      - plocate
+
+      # Compression
+      - p7zip
+      - p7zip-plugins
+      - unrar
+      - unzip
+      - zip
+      - zstd
+      - lz4
+
+      # System & Hardware
+      - distrobox
+      - podman
+      - podman-compose
+      - fuse3
+      - wl-clipboard
+      - pinentry-qt
+      - kitty
+      - openssl
+
+      # Gaming Support (Base libs)
+      - gamemode
+      - mangohud
+      - steam-devices
+
+  - type: nvidia
+    # This module handles installing the correct kernel drivers and
+    # ensuring they are loaded for the RTX 5070 Ti.
+    install-open-drivers: true
+
+  - type: fonts
+    fonts:
+      nerd-fonts:
+        - JetBrainsMono
 
   - type: default-flatpaks
-    configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
-          - org.mozilla.firefox
-          - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+    notify: true
+    system:
+      # Browsers
+      - com.google.Chrome
+      - org.mozilla.firefox
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+      # IDEs
+      - com.visualstudio.code
+
+      # Gaming
+      - com.valvesoftware.Steam
+      - com.heroicgameslauncher.hgl
+      - net.lutris.Lutris
+
+      # Media & Social
+      - org.videolan.VLC
+      - com.discordapp.Discord
+
+  - type: script
+    scripts:
+      - post-install.sh
+
+  - type: signing
+    signing_key: /cosign.pub
