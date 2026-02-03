@@ -1,7 +1,7 @@
 name: ninja-os
 description: "Ninja build"
-base-image: ghcr.io/ublue-os/kinoite-main
-image-version: 41
+base-image: ghcr.io/ublue-os/kinoite-nvidia
+image-version: 43
 
 modules:
   - type: files
@@ -13,6 +13,7 @@ modules:
     repos:
       - https://copr.fedorainfracloud.org/coprs/atim/lazygit/repo/fedora-%OS_VERSION%/atim-lazygit-fedora-%OS_VERSION%.repo
       - https://copr.fedorainfracloud.org/coprs/varlad/yazi/repo/fedora-%OS_VERSION%/varlad-yazi-fedora-%OS_VERSION%.repo
+      - https://copr.fedorainfracloud.org/coprs/atim/starship/repo/fedora-%OS_VERSION%/atim-starship-fedora-%OS_VERSION%.repo
     install:
       # Development
       - neovim
@@ -46,8 +47,7 @@ modules:
       - plocate
 
       # Compression
-      - p7zip
-      - p7zip-plugins
+      # p7zip and plugins removed due to conflict with 7zip in F43
       - unrar
       - unzip
       - zip
@@ -69,10 +69,7 @@ modules:
       - mangohud
       - steam-devices
 
-  - type: nvidia
-    # This module handles installing the correct kernel drivers and
-    # ensuring they are loaded for the RTX 5070 Ti.
-    install-open-drivers: true
+  # akmods removed as base image now includes nvidia drivers
 
   - type: fonts
     fonts:
@@ -80,27 +77,28 @@ modules:
         - JetBrainsMono
 
   - type: default-flatpaks
-    notify: true
-    system:
-      # Browsers
-      - com.google.Chrome
-      - org.mozilla.firefox
+    configurations:
+      - scope: system
+        install:
+          # Browsers
+          - com.google.Chrome
+          - org.mozilla.firefox
 
-      # IDEs
-      - com.visualstudio.code
+          # IDEs
+          - com.visualstudio.code
 
-      # Gaming
-      - com.valvesoftware.Steam
-      - com.heroicgameslauncher.hgl
-      - net.lutris.Lutris
+          # Gaming
+          - com.valvesoftware.Steam
+          - com.heroicgameslauncher.hgl
+          - net.lutris.Lutris
 
-      # Media & Social
-      - org.videolan.VLC
-      - com.discordapp.Discord
+          # Media & Social
+          - org.videolan.VLC
+          - com.discordapp.Discord
 
   - type: script
     scripts:
       - post-install.sh
 
   - type: signing
-    signing_key: /cosign.pub
+
